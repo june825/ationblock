@@ -427,7 +427,7 @@ const blocks = [
          } else if (value == "pause") {
            Entry.engine.togglePause()
          } else if (value == "fullscreen") {
-           Entry.engine.fullscreen()
+           Entry.engine.toggleFullScreen()
          }
       }
     },
