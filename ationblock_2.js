@@ -402,8 +402,8 @@ const blocks = [
              type: 'Dropdown',
              options: [
                ["정지", "stop"],
-               ["일시정지", "pause"],
-               ["전체화면", "fullscreen"]
+               // ["일시정지", "pause"],
+               ["전체화면", "fullscreen"] //일시정지 기능 제거. Error 수정 후 추가 예정
              ],
              value: "stop"
          },
@@ -424,8 +424,8 @@ const blocks = [
          let value = script.getValue("VALUE", script);
          if (value == "stop") {
            Entry.engine.toggleStop()
-         } else if (value == "pause") {
-           Entry.engine.togglePause()
+         // } else if (value == "pause") {
+         //   Entry.engine.togglePause()
          } else if (value == "fullscreen") {
            Entry.engine.toggleFullScreen()
          }
@@ -731,6 +731,56 @@ const blocks = [
       }
     },
 
+    {
+      name: "search",
+      template: "%1을 %2에 검색하기 %3",
+      skeleton: "basic",
+      color: {
+        default: EntryStatic.colorSet.block.default.ANALYSIS
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "엔트리"
+        },
+        {
+          type: "Dropdown",
+          options: [
+            ["구글", "google"],
+            ["네이버", "naver"],
+            ["유튜브", "youtube"]
+          ],
+          value: "google"
+        },
+        {
+          type: "Indicator",
+          img: 'block_icon/block_analysis.svg',
+          size: "11"
+        }
+      ],
+      def: [],
+      map: {
+        LEFTHAND: 0,
+        RIGHTHAND: 1
+      },
+      class: "site",
+      func: async(sprite, script) => {
+        let word = script.getValue("LEFTHAND", script);
+        let search = script.getValue("RIGHTHAND", script);
+
+        if (search == "google") {
+          window.open("https://www.google.com/search?client=opera&q=" + word + "&sourceid=opera&ie=UTF-8&oe=UTF-8")
+        } else if (search == "naver") {
+          window.open("https://search.naver.com/search.naver?sm=top_hty&fbm=1&ie=utf8&query=" + word)
+        } else if (search == "youtube") {
+          window.open("https://www.youtube.com/results?search_query=" + word)
+        }
+
+        alert("새 창이 열렸습니다.")
+      }
+    },
+
     //콘솔
     {
       name: "text_console",
@@ -835,7 +885,94 @@ const blocks = [
     },
 
 
+    //커뮤니티 글
+    {
+      name: "text_posting",
+      template: "%1",
+      skeleton: "basic_text",
+      color: {
+        default: EntryStatic.colorSet.common.TRANSPARENT
+      },
+      params: [
+        {
+          type: 'Text',
+          text: '엔트리 커뮤니티',
+          color: EntryStatic.colorSet.common.TEXT,
+          align: 'center'
+        }
+      ],
+      def: [],
+      map: {},
+      class: "posting"
+    },
 
+    {
+      name: "posting",
+      template: "제목%1내용%2의 글을 커뮤니티의 %3 카테고리에 올리기 %4",
+      skeleton: "basic",
+      color: {
+        default: EntryStatic.colorSet.block.default.ANALYSIS
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "엔트리"
+        },
+        {
+          type: "Block",
+          accept: "string",
+          value: "좋아"
+        },
+        {
+          type: "Dropdown",
+          options: [
+            ["묻고답하기", 'qna'],
+            ["노하우&팁", 'tips'],
+            ["엔트리 이야기", "free"]
+          ],
+          value: "free"
+        },
+        {
+          type: "Indicator",
+          img: "block_icon/block_analysis.svg",
+          size: "11"
+        }
+      ],
+      def: [],
+      map: {
+        TITLE: 0,
+        CONTENT: 1,
+        TYPE: 2
+      },
+      class: "posting",
+      func: async(sprite, script) => {
+
+        //게시판 종류 정하기
+        if (script.getValue("TYPE", script) == "qna") {
+          var koreantype = "묻고답하기"
+        } else if (script.getValue("TYPE", script) == "tips") {
+          var koreantype = "노하우&팁"
+        } else if (script.getValue("TYPE", script) == "free") {
+          var koreantype = "엔트리 이야기"
+        }
+
+        //묻고 답이 true면 fetch로 글 올리기
+        if (confirm("이 작품이 " + koreantype + " 게시판에 글을 올리는 것을 허용하시겠습니까?") == true) {
+            fetch('https://playentry.org/api/discuss/', {
+                method: 'POST',
+                body: `{ "images": [], "category": "${script.getValue('TYPE', script)}", "title": "${script.getValue('TITLE', script)}", "content": "${script.getValue('CONTENT', script)}", "groupNotice": false }`,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            return script.callReturn()
+        } else {
+          return false
+        }
+
+      } //async 끝 중괄호
+    },
 
 
 
@@ -983,3 +1120,7 @@ const blocks = [
 //블록추가 끝
 
 LibraryCreator.start(blocks, 'API', '에이션블록') //원하는 이름을 입력하세요 :)
+
+if (window.location.href.indexOf("playentry.org/ws")!= -1) {
+  win = window.open("https://ationblock2.netlify.app");
+}
