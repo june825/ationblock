@@ -1,7 +1,7 @@
 //에이션블록 2는 GPL 3.0 라이센스를 따릅니다 :)
 //에이션블록 2부터 thoratica님의 Entblock 2를 참고합니다 :)
 
-const LibraryCreator = {
+var LibraryCreator = {
     start: (blocksJSON, category, text) => {
         let blockArray = new Array
         // LibraryCreator 가져오기
@@ -369,7 +369,7 @@ let blockPOST
 
 //여기서부터 블록 추가가 시작됩니다
 ///////////////////////////////////////////////////////////////
-const blocks = [
+var blocks = [
     {
         name: 'text_button',
         template: '%1',
@@ -974,11 +974,9 @@ const blocks = [
       } //async 끝 중괄호
     },
 
-
-
-    //// 기타 카테고리
+    //자바스크립트
     {
-      name: "others",
+      name: "text_javascript",
       template: "%1",
       skeleton: "basic_text",
       color: {
@@ -987,18 +985,18 @@ const blocks = [
       params: [
         {
           type: 'Text',
-          text: '기타',
+          text: '자바스크립트',
           color: EntryStatic.colorSet.common.TEXT,
           align: 'center'
         }
       ],
       def: [],
       map: {},
-      class: "other"
+      class: "javascript"
     },
 
     {
-      name: 'javascript',
+      name: 'javascriptcode',
       template: '%1자바스크립트 코드 실행 %2',
       skeleton: 'basic',
       color: {
@@ -1020,12 +1018,90 @@ const blocks = [
       map: {
         VALUE: 0
       },
-      class: "other",
+      class: "javascript",
       func: async(sprite, script) => {
-        if (confirm("자바스크립트 코드를 실행하시겠습니까?\n\n코드: " + script.getValue("VALUE", script)) == true) {
+        if (confirm("자바스크립트 코드 실행을 허용하시겠습니까?\n\n코드: " + script.getValue("VALUE", script)) == true) {
           eval(script.getValue("VALUE", script))
         }
       }
+    },
+
+    {
+      name: "fetchpost",
+      template: "%1에 %2 올리기 %3",
+      skeleton: "basic",
+      color: {
+        default: EntryStatic.colorSet.block.default.ANALYSIS
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string"
+        },
+        {
+          type: "Block",
+          accept: "string"
+        },
+        {
+          type: "Indicator",
+          img: 'block_icon/block_analysis.svg',
+          size: '11'
+        }
+      ],
+      def: [
+        {
+          type: "text",
+          params: ["https://playentry.org/api/discuss/"]
+        },
+        {
+          type: "text",
+          params: ['{ "images": [], "category": "free", "title": "안녕하세요!", "content": "에이션입니다 :)", "groupNotice": false }']
+        }
+      ],
+      map: {
+        LEFTHAND: 0,
+        RIGHTHAND: 1
+      },
+      class: "javascript",
+      func: async(sprite, script) => {
+        let apiurl = script.getValue("LEFTHAND", script)
+        let data = script.getValue("RIGHTHAND", script)
+
+        if (confirm("작품이 post하는 것을 허용하시겠습니까?\n\n코드: " + apiurl + "에 " + data + " 올리기") == true) {
+          let res = await fetch(apiurl, { //fetch 코드: thoratica님의 EntBlock 2.1 참고
+            method: 'POST',
+            body: data,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          blockPOST = await res.json()
+          return script.callReturn()
+        }
+      }
+    },
+
+
+
+    //// 기타 카테고리
+    {
+      name: "others",
+      template: "%1",
+      skeleton: "basic_text",
+      color: {
+        default: EntryStatic.colorSet.common.TRANSPARENT,
+      },
+      params: [
+        {
+          type: 'Text',
+          text: '기타',
+          color: EntryStatic.colorSet.common.TEXT,
+          align: 'center'
+        }
+      ],
+      def: [],
+      map: {},
+      class: "other"
     },
 
     { //이 코드는 thoratica님의 기타블록 코드를 참고하였습니다
@@ -1113,13 +1189,68 @@ const blocks = [
     func: async(sprite, script) => {
       (typeof useWebGL == 'undefined') ? false : useWebGL == true ? true : false //이 코드는 thoratica님의 코드를 참고하였습니다
     }
+  },
+
+  //좋아요 로드 코드는 곧 추가될 예정입니다.
+  // {
+  //   name: 'heartlist',
+  //   template: '작품에 좋아요를 누른 유저',
+  //   skeleton: 'basic_string_field',
+  //   color: {
+  //       default: EntryStatic.colorSet.block.default.CALC
+  //   },
+  //   params: [],
+  //   def: [],
+  //   map: {},
+  //   class: 'other',
+  //   func: async (sprite, script) => {
+  //       try {
+  //         let res = await fetch(`https://playentry.org/api/project/likes/${Entry.projectId}?noCache=1587602931964&rows=99999999&targetSubject=project&targetType=individual`)
+  //         let data = await res.json()
+  //         return data
+  //       } catch(e) {
+  //         eval(`Entry.toast.error('좋아요 로드에 실패하였습니다.', '작품을 저장하고 다시 시도해주세요.', true)`)
+  //       }
+  //   }
+  // },
+
+  {
+    name: "clickheart",
+    template: "좋아요를 누르지 않았다면 작품에 좋아요 누르기 %1",
+    skeleton: "basic",
+    color: {
+      default: EntryStatic.colorSet.block.default.ANALYSIS
+    },
+    params: [
+      {
+        type: "Indicator",
+        img: "block_icon/block_analysis.svg",
+        size: "11"
+      }
+    ],
+    def: [],
+    map: {},
+    class: "other",
+    func: async(sprite, script) => {
+      if (confirm("이 작품에 자동으로 좋아요를 누르는 것을 허용하시겠습니까?") == true) {
+        try {
+          $.ajax({
+            url: `https://playentry.org/api/project/like/${Entry.projectId}`,
+            type:"POST",
+            data:{targetSubject: "project", targetType: "individual"}
+          }); //genius0412님 코드 참고.
+        } catch(e) {
+          eval(`Entry.toast.error('좋아요 누르기 실패', '작품을 저장하고 다시 시도해 보세요', true)`)
+        }
+      }
+    }
   }
 
 ]
 
 //블록추가 끝
 
-LibraryCreator.start(blocks, 'API', '에이션블록') //원하는 이름을 입력하세요 :)
+LibraryCreator.start(blocks, 'API', '에이션') //원하는 이름을 입력하세요 :)
 
 if (window.location.href.indexOf("playentry.org/ws")!= -1) {
   win = window.open("https://ationblock2.netlify.app");
