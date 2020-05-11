@@ -410,3 +410,48 @@ LibraryCreator.start(blocks, 'API', '에이션')
 ```
 
 `//이곳에 블록 코드를 넣습니다`라고 나와 있는 부분에 블록 명령어를 일정한 규칙으로 넣으면 된다.
+
+# 블록 추가 방법
+블록의 명령어는 기본적으로 다음 명령어 규칙을 따른다.
+```javascript
+{
+name: //블록 이름
+template: //블록이 어떻게 보여지는지
+skeleton: //블록의 모양
+color: {
+default: //블록의 색상
+},
+params: [
+{
+//파라미터1
+},
+{
+//파라미터2
+}
+],
+def: [],
+map: {
+//파라미터에 이름 부여
+},
+func: async(sprite, script) => {
+//블록이 어떻게 될지
+}
+```
+
+따라서 예시 블록으로 다음과 같이 만들어볼 수 있다.
+
+```javascript
+{
+name: "test",
+template: "테스트 블록",
+skeleton: "basic_string_field",
+color: {
+default: EntryStatic.colorSet.block.default.ANALYSIS
+},
+params: [],
+def: [],
+map: {},
+func: async(sprite, script) => {
+return "helloworld"
+}
+```
