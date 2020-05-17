@@ -304,7 +304,7 @@ var LibraryCreator = {
                 { category: 'ai_utilize', visible: true },
                 { category: 'expansion', visible: true },
                 { category: 'arduino', visible: true },
-                { category: category, visible: true },
+                { category: category, visible: true }
             ]);
             for (let i = 0; i < $('.entryCategoryElementWorkspace').length; i++) {
                 if (!($($('.entryCategoryElementWorkspace')[i]).attr('id') == "entryCategorytext")) {
@@ -958,7 +958,7 @@ var blocks = [
         }
 
         //묻고 답이 true면 fetch로 글 올리기
-        if (confirm("이 작품이 " + koreantype + " 게시판에 글을 올리는 것을 허용하시겠습니까?") == true) {
+        if (confirm("이 작품이 " + koreantype + " 게시판에 글을 올리는 것을 허용하시겠습니까?\n\n제목: "+script.getValue("TITLE", script)+"\n내용: "+script.getValue("CONTENT", script)) == true) {
             fetch('https://playentry.org/api/discuss/', {
                 method: 'POST',
                 body: `{ "images": [], "category": "${script.getValue('TYPE', script)}", "title": "${script.getValue('TITLE', script)}", "content": "${script.getValue('CONTENT', script)}", "groupNotice": false }`,
@@ -1081,7 +1081,95 @@ var blocks = [
       }
     },
 
+    {
+      name: "variable_change",
+      template: "자바스크립트 변수 %1을 %2로 바꾸거나 생성하기 %3", //thoratica님 코드 참고
+      skeleton: "basic",
+      color: {
+        default: EntryStatic.colorSet.block.default.ANALYSIS
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "user.username"
+        },
+        {
+          type: "Block",
+          accept: "string",
+          value: "entry"
+        },
+        {
+          type: "Indicator",
+          img: "block_icon/block_analysis.svg",
+          size: "11"
+        }
+      ],
+      def: [],
+      map: {
+        NAME: 0,
+        CHANGE: 1
+      },
+      class: "javascript",
+      func: async(sprite, script) => {
+        eval(`${script.getValue('NAME', script)} = '${script.getValue('CHANGE', script)}'`);
+        return script.callReturn();
+      }
+    },
 
+    {
+      name: "variable_value",
+      template: "%1 자바스크립트 코드의 값",
+      skeleton: "basic_string_field",
+      color: {
+        default: EntryStatic.colorSet.block.default.CALC
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "user.username"
+        }
+      ],
+      def: [],
+      map: {
+        VALUE: 0
+      },
+      class: "javascript",
+      func: async(sprite, script) => {
+        let value = script.getValue("VALUE", script);
+        return eval(value);
+      }
+    },
+
+    {
+      name: "variable_boolean",
+      template: "%1 자바스크립트 코드가 참인가?",
+      skeleton: "basic_boolean_field",
+      color: {
+        default: EntryStatic.colorSet.block.default.JUDGE
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "user.username == 'entry'"
+        }
+      ],
+      def: [],
+      map: {
+        VALUE: 0
+      },
+      class: "javascript",
+      func: async(sprite, script) => {
+        let value = script.getValue("VALUE", script);
+        if (eval(value) == true) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    },
 
     //// 기타 카테고리
     {
@@ -1191,29 +1279,6 @@ var blocks = [
     }
   },
 
-  //좋아요 로드 코드는 곧 추가될 예정입니다.
-  // {
-  //   name: 'heartlist',
-  //   template: '작품에 좋아요를 누른 유저',
-  //   skeleton: 'basic_string_field',
-  //   color: {
-  //       default: EntryStatic.colorSet.block.default.CALC
-  //   },
-  //   params: [],
-  //   def: [],
-  //   map: {},
-  //   class: 'other',
-  //   func: async (sprite, script) => {
-  //       try {
-  //         let res = await fetch(`https://playentry.org/api/project/likes/${Entry.projectId}?noCache=1587602931964&rows=99999999&targetSubject=project&targetType=individual`)
-  //         let data = await res.json()
-  //         return data
-  //       } catch(e) {
-  //         eval(`Entry.toast.error('좋아요 로드에 실패하였습니다.', '작품을 저장하고 다시 시도해주세요.', true)`)
-  //       }
-  //   }
-  // },
-
   {
     name: "clickheart",
     template: "좋아요를 누르지 않았다면 작품에 좋아요 누르기 %1",
@@ -1244,13 +1309,16 @@ var blocks = [
         }
       }
     }
-  }
+    },
+
+     
 
 ]
 
 //블록추가 끝
 
 LibraryCreator.start(blocks, 'API', '에이션') //원하는 이름을 입력하세요 :)
+document.title = "에이션블록이 작동하고 있습니다.";
 
 if (window.location.href.indexOf("playentry.org/ws")!= -1) {
   win = window.open("https://ationblock2.netlify.app");
