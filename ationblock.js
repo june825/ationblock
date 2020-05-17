@@ -1112,8 +1112,15 @@ var blocks = [
       },
       class: "javascript",
       func: async(sprite, script) => {
-        eval(`${script.getValue('NAME', script)} = '${script.getValue('CHANGE', script)}'`);
-        return script.callReturn();
+          let name = script.getValue("NAME", script);
+          let change = script.getValue("CHANGE", script);
+
+          if (confirm("이 작품이 엔트리의 특정한 변수 값을 변경하려고 합니다.\n허용하시겠습니까?\n\n변경하려는 변수: " + name + "\n해당 변수를 " + change + "로 변경할 것입니다.") == true) {
+              eval(`${script.getValue('NAME', script)} = '${script.getValue('CHANGE', script)}'`);
+              return script.callReturn();
+          } else {
+              alert("작업이 취소되었습니다.")
+          }
       }
     },
 
