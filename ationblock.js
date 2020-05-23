@@ -387,7 +387,7 @@ var blocks = [
         ],
         def: [],
         map: {},
-        class: 'buttonclick'
+        class: 'airblock'
     },
     /////////////////////////////////////////////////////////////////
     {
@@ -459,7 +459,7 @@ var blocks = [
 
       {
         name: 'alert',
-        template: '%1내용의 알림창 띄우기%2',
+        template: '%1내용의 %2 띄우기%3',
         skeleton: 'basic',
         color: {
            default: EntryStatic.colorSet.block.default.ANALYSIS
@@ -468,6 +468,15 @@ var blocks = [
            {
                type: 'Block',
                accept: 'string'
+           },
+           {
+             type: "Dropdown",
+             options: [
+               ["알림창", 'alert'],
+               ["입력창", 'prompt'],
+               ["선택창", 'confirm']
+             ],
+             value: "alert"
            },
            {
               type: 'Indicator',
@@ -482,16 +491,22 @@ var blocks = [
            }
        ],
        map: {
-           VALUE: 0
+           VALUE: 0,
+           OPTION: 1
        },
        class: 'alertpromptconfirm',
        func: async (sprite, script) => {
-           alert(script.getValue('VALUE', script));
-        },
+           let value = script.getValue("VALUE", script);
+           let option = script.getValue("OPTION", script);
 
-
-
-
+           if (option == "alert") {
+             alert(value);
+           } else if (option == "prompt") {
+             prompt(value)
+           } else if (option == "confirm") {
+             confirm(value)
+           }
+       }
     },
 
     {
@@ -673,7 +688,7 @@ var blocks = [
     },
 
     {
-      name: 'newtab',
+      name: 'entry_newtab',
       template: '엔트리의 %1 페이지 열기 %2',
       skeleton: 'basic',
       color: {
@@ -749,7 +764,9 @@ var blocks = [
           options: [
             ["구글", "google"],
             ["네이버", "naver"],
-            ["유튜브", "youtube"]
+            ["유튜브", "youtube"],
+            ["네이버 사전", "dictionary"],
+            ["엔트리 공유하기", "entryshare"]
           ],
           value: "google"
         },
@@ -775,6 +792,10 @@ var blocks = [
           window.open("https://search.naver.com/search.naver?sm=top_hty&fbm=1&ie=utf8&query=" + word)
         } else if (search == "youtube") {
           window.open("https://www.youtube.com/results?search_query=" + word)
+        } else if (search == "dictionary") {
+          window.open("https://dict.naver.com/search.nhn?dicQuery=" + word)
+        } else if (search == "entryshare") {
+          window.open("https://playentry.org/all#!/?sort=updated&rows=12&page=1&name=" + word)
         }
 
         alert("새 창이 열렸습니다.")
@@ -974,209 +995,6 @@ var blocks = [
       } //async 끝 중괄호
     },
 
-    //자바스크립트
-    {
-      name: "text_javascript",
-      template: "%1",
-      skeleton: "basic_text",
-      color: {
-        default: EntryStatic.colorSet.common.TRANSPARENT,
-      },
-      params: [
-        {
-          type: 'Text',
-          text: '자바스크립트',
-          color: EntryStatic.colorSet.common.TEXT,
-          align: 'center'
-        }
-      ],
-      def: [],
-      map: {},
-      class: "javascript"
-    },
-
-    {
-      name: 'javascriptcode',
-      template: '%1자바스크립트 코드 실행 %2',
-      skeleton: 'basic',
-      color: {
-        default: EntryStatic.colorSet.block.default.ANALYSIS
-      },
-      params: [
-        {
-          type: "Block",
-          accept: "string",
-          value: "alert('엔트리')"
-        },
-        {
-          type: "Indicator",
-          img: 'block_icon/block_analysis.svg',
-          size: '11'
-        }
-      ],
-      def: [],
-      map: {
-        VALUE: 0
-      },
-      class: "javascript",
-      func: async(sprite, script) => {
-        if (confirm("자바스크립트 코드 실행을 허용하시겠습니까?\n\n코드: " + script.getValue("VALUE", script)) == true) {
-          eval(script.getValue("VALUE", script))
-        }
-      }
-    },
-
-    {
-      name: "fetchpost",
-      template: "%1에 %2 올리기 %3",
-      skeleton: "basic",
-      color: {
-        default: EntryStatic.colorSet.block.default.ANALYSIS
-      },
-      params: [
-        {
-          type: "Block",
-          accept: "string"
-        },
-        {
-          type: "Block",
-          accept: "string"
-        },
-        {
-          type: "Indicator",
-          img: 'block_icon/block_analysis.svg',
-          size: '11'
-        }
-      ],
-      def: [
-        {
-          type: "text",
-          params: ["https://playentry.org/api/discuss/"]
-        },
-        {
-          type: "text",
-          params: ['{ "images": [], "category": "free", "title": "안녕하세요!", "content": "에이션입니다 :)", "groupNotice": false }']
-        }
-      ],
-      map: {
-        LEFTHAND: 0,
-        RIGHTHAND: 1
-      },
-      class: "javascript",
-      func: async(sprite, script) => {
-        let apiurl = script.getValue("LEFTHAND", script)
-        let data = script.getValue("RIGHTHAND", script)
-
-        if (confirm("작품이 post하는 것을 허용하시겠습니까?\n\n코드: " + apiurl + "에 " + data + " 올리기") == true) {
-          let res = await fetch(apiurl, { //fetch 코드: thoratica님의 EntBlock 2.1 참고
-            method: 'POST',
-            body: data,
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-          blockPOST = await res.json()
-          return script.callReturn()
-        }
-      }
-    },
-
-    {
-      name: "variable_change",
-      template: "자바스크립트 변수 %1을 %2로 바꾸거나 생성하기 %3", //thoratica님 코드 참고
-      skeleton: "basic",
-      color: {
-        default: EntryStatic.colorSet.block.default.ANALYSIS
-      },
-      params: [
-        {
-          type: "Block",
-          accept: "string",
-          value: "user.username"
-        },
-        {
-          type: "Block",
-          accept: "string",
-          value: "entry"
-        },
-        {
-          type: "Indicator",
-          img: "block_icon/block_analysis.svg",
-          size: "11"
-        }
-      ],
-      def: [],
-      map: {
-        NAME: 0,
-        CHANGE: 1
-      },
-      class: "javascript",
-      func: async(sprite, script) => {
-          let name = script.getValue("NAME", script);
-          let change = script.getValue("CHANGE", script);
-
-          if (confirm("이 작품이 엔트리의 특정한 변수 값을 변경하려고 합니다.\n허용하시겠습니까?\n\n변경하려는 변수: " + name + "\n해당 변수를 " + change + "로 변경할 것입니다.") == true) {
-              eval(`${script.getValue('NAME', script)} = '${script.getValue('CHANGE', script)}'`);
-              return script.callReturn();
-          } else {
-              alert("작업이 취소되었습니다.")
-          }
-      }
-    },
-
-    {
-      name: "variable_value",
-      template: "%1 자바스크립트 코드의 값",
-      skeleton: "basic_string_field",
-      color: {
-        default: EntryStatic.colorSet.block.default.CALC
-      },
-      params: [
-        {
-          type: "Block",
-          accept: "string",
-          value: "user.username"
-        }
-      ],
-      def: [],
-      map: {
-        VALUE: 0
-      },
-      class: "javascript",
-      func: async(sprite, script) => {
-        let value = script.getValue("VALUE", script);
-        return eval(value);
-      }
-    },
-
-    {
-      name: "variable_boolean",
-      template: "%1 자바스크립트 코드가 참인가?",
-      skeleton: "basic_boolean_field",
-      color: {
-        default: EntryStatic.colorSet.block.default.JUDGE
-      },
-      params: [
-        {
-          type: "Block",
-          accept: "string",
-          value: "user.username == 'entry'"
-        }
-      ],
-      def: [],
-      map: {
-        VALUE: 0
-      },
-      class: "javascript",
-      func: async(sprite, script) => {
-        let value = script.getValue("VALUE", script);
-        if (eval(value) == true) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-    },
 
     //// 기타 카테고리
     {
@@ -1318,7 +1136,218 @@ var blocks = [
     }
     },
 
-     
+    //ProBlock
+    //////////////////////////////////
+    {
+      name: "text_problock",
+      template: "%1",
+      skeleton: "basic_text",
+      color: {
+        default: EntryStatic.colorSet.common.TRANSPARENT,
+      },
+      params: [
+        {
+          type: 'Text',
+          text: 'ProBlock',
+          color: EntryStatic.colorSet.common.TEXT,
+          align: 'center',
+          size: "20"
+        }
+      ],
+      def: [],
+      map: {},
+      class: "problock"
+    },
+
+    {
+      name: 'javascriptcode',
+      template: '%1자바스크립트 코드 실행 %2',
+      skeleton: 'basic',
+      color: {
+        default: EntryStatic.colorSet.block.default.ANALYSIS
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "alert('엔트리')"
+        },
+        {
+          type: "Indicator",
+          img: 'block_icon/block_analysis.svg',
+          size: '11'
+        }
+      ],
+      def: [],
+      map: {
+        VALUE: 0
+      },
+      class: "problock",
+      func: async(sprite, script) => {
+        if (confirm("자바스크립트 코드 실행을 허용하시겠습니까?\n\n코드: " + script.getValue("VALUE", script)) == true) {
+          eval(script.getValue("VALUE", script))
+        }
+      }
+    },
+
+    {
+      name: "fetchpost",
+      template: "%1에 %2 올리기 %3",
+      skeleton: "basic",
+      color: {
+        default: EntryStatic.colorSet.block.default.ANALYSIS
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string"
+        },
+        {
+          type: "Block",
+          accept: "string"
+        },
+        {
+          type: "Indicator",
+          img: 'block_icon/block_analysis.svg',
+          size: '11'
+        }
+      ],
+      def: [
+        {
+          type: "text",
+          params: ["https://playentry.org/api/discuss/"]
+        },
+        {
+          type: "text",
+          params: ['{ "images": [], "category": "free", "title": "안녕하세요!", "content": "에이션입니다 :)", "groupNotice": false }']
+        }
+      ],
+      map: {
+        LEFTHAND: 0,
+        RIGHTHAND: 1
+      },
+      class: "problock",
+      func: async(sprite, script) => {
+        let apiurl = script.getValue("LEFTHAND", script)
+        let data = script.getValue("RIGHTHAND", script)
+
+        if (confirm("작품이 post하는 것을 허용하시겠습니까?\n\n코드: " + apiurl + "에 " + data + " 올리기") == true) {
+          let res = await fetch(apiurl, { //fetch 코드: thoratica님의 EntBlock 2.1 참고
+            method: 'POST',
+            body: data,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          blockPOST = await res.json()
+          return script.callReturn()
+        }
+      }
+    },
+
+    {
+      name: "variable_change",
+      template: "자바스크립트 변수 %1을 %2로 바꾸거나 생성하기 %3", //thoratica님 코드 참고
+      skeleton: "basic",
+      color: {
+        default: EntryStatic.colorSet.block.default.ANALYSIS
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "user.username"
+        },
+        {
+          type: "Block",
+          accept: "string",
+          value: "entry"
+        },
+        {
+          type: "Indicator",
+          img: "block_icon/block_analysis.svg",
+          size: "11"
+        }
+      ],
+      def: [],
+      map: {
+        NAME: 0,
+        CHANGE: 1
+      },
+      class: "problock",
+      func: async(sprite, script) => {
+          let name = script.getValue("NAME", script);
+          let change = script.getValue("CHANGE", script);
+
+          if (confirm("이 작품이 엔트리의 특정한 변수 값을 변경하려고 합니다.\n허용하시겠습니까?\n\n변경하려는 변수: " + name + "\n해당 변수를 " + change + "로 변경할 것입니다.") == true) {
+              eval(`${script.getValue('NAME', script)} = '${script.getValue('CHANGE', script)}'`);
+              return script.callReturn();
+          } else {
+              alert("작업이 취소되었습니다.")
+          }
+      }
+    },
+
+    {
+      name: "variable_value",
+      template: "%1 자바스크립트 코드의 값",
+      skeleton: "basic_string_field",
+      color: {
+        default: EntryStatic.colorSet.block.default.CALC
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "user.username"
+        }
+      ],
+      def: [],
+      map: {
+        VALUE: 0
+      },
+      class: "problock",
+      func: async(sprite, script) => {
+        let value = script.getValue("VALUE", script);
+        if (confirm("자바스크립트 코드를 실행하는 것을 허용하시겠습니까?\n\n코드: "+value) == true) {
+          return eval(value);
+        }
+      }
+    },
+
+    {
+      name: "variable_boolean",
+      template: "%1 자바스크립트 코드가 참인가?",
+      skeleton: "basic_boolean_field",
+      color: {
+        default: EntryStatic.colorSet.block.default.JUDGE
+      },
+      params: [
+        {
+          type: "Block",
+          accept: "string",
+          value: "user.username == 'entry'"
+        }
+      ],
+      def: [],
+      map: {
+        VALUE: 0
+      },
+      class: "problock",
+      func: async(sprite, script) => {
+        let value = script.getValue("VALUE", script);
+        if (confirm("자바스크립트 코드를 실행하는 것을 허용하시겠습니까?\n\n코드: "+value) == true) {
+          if (eval(value) == true) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          alert("작업이 취소되었습니다.")
+        }
+      }
+    },
+
 
 ]
 
